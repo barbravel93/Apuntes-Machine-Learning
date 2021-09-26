@@ -1,0 +1,80 @@
+# Primero importamos los packages requeridos
+import matplotlib.pyplot as plt
+import pandas as pd
+import pylab as pl
+import numpy as np
+%matplotlib inline
+
+# Los iguiente será descargar los datos que utilizaremos
+!wget -O FuelConsumption.csv https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-ML0101EN-SkillsNetwork/labs/Module%202/data/FuelConsumptionCo2.csv
+
+# El siguiente paso previo a la expliración de los datos será dataframear dichos datos usando Pandas
+df = pd.read_csv("FuelConsumption.csv")
+
+# Echamos un primer vistazo a nuestro dataset
+df.head()
+
+# Comenzamos con la exploración. Lo primero que haremos será echar un vistazo más descriptivo de nuestros datos mediante el método .describe()
+# summarize the data
+df.describe()
+
+# Es momento de seleccionar las columnas que pensemos que resultarán más relevantes para analizarlas en mayor profundidad
+cdf = df[['ENGINESIZE','CYLINDERS','FUELCONSUMPTION_COMB','CO2EMISSIONS']]
+cdf.head(9)
+
+# Hecho esto, podemos recurrir al análisis visual creando algunos histogramas
+viz = cdf[['CYLINDERS','ENGINESIZE','CO2EMISSIONS','FUELCONSUMPTION_COMB']]
+viz.hist()
+plt.show()
+
+# Ahora haremos lo propio, pero correlacionando cada una de las características (columnas) de nuestro df con aquella que será la variable a predecir
+  #Con FuelConsumption en nuestro ejemplo:
+  plt.scatter(cdf.FUELCONSUMPTION_COMB, cdf.CO2EMISSIONS,  color='blue')
+  plt.xlabel("FUELCONSUMPTION_COMB")
+  plt.ylabel("Emission")
+  plt.show()
+  #Con ENGINESIZE en nuestro ejemplo:
+  plt.scatter(cdf.ENGINESIZE, cdf.CO2EMISSIONS,  color='blue')
+  plt.xlabel("Engine size")
+  plt.ylabel("Emission")
+  plt.show()
+  #Con CYLINDERS:
+  plt.scatter(cdf.CYLINDERS, cdf.CO2EMISSIONS, color='blue')
+  plt.xlabel('Cylinders')
+  plt.ylabel('Emission')
+  plt.show
+  
+# Una vez hecha la exploración visual de nuestros datos, procedemos a crear un train y un test dataset, para lo que recurriremos al splitting
+  # Empezamos por separar nuestro ds en un ds de entrenamiento (80% de los datos) y otro de prueba (20% de los datos)
+    # Para hacer esta división aleatoria, recurriremos a la función np.random.rand()
+ msk = np.random.rand(len(df)) < 0.8
+ train = cdf[msk]
+ test = cdf[~msk]
+ 
+ #Train data distribution: En este paso creamos un scatter plot con los datos de entrenamiento
+plt.scatter(train.ENGINESIZE, train.CO2EMISSIONS,  color='blue')
+plt.xlabel("Engine size")
+plt.ylabel("Emission")
+plt.show()
+
+# Hecho esto, utilizamos sklearn para realizar el modelado de datos
+from sklearn import linear_model
+regr = linear_model.LinearRegression()
+train_x = np.asanyarray(train[['ENGINESIZE']])
+train_y = np.asanyarray(train[['CO2EMISSIONS']])
+regr.fit (train_x, train_y)
+# The coefficients
+print ('Coefficients: ', regr.coef_)
+print ('Intercept: ',regr.intercept_)
+
+   #El resultado del modelado es [Coefficients:  [[39.03810307]] ; Intercept:  [125.40470971]]
+  #En la regresión linear simple, coefficient & intercept son los parámetros de la linea de ajuste. Consecuentemente, obtener estos datos será obtener la recta de ajuste.
+#Ahora que conocemos los datos que completan la ecuación, podemos trazar la recta de ajuste en nuestro gráfico
+plt.scatter(train.ENGINESIZE, train.CO2EMISSIONS,  color='blue')
+plt.plot(train_x, regr.coef_[0][0]*train_x + regr.intercept_[0], '-r')
+plt.xlabel("Engine size")
+plt.ylabel("Emission")
+
+#Es momento de evaluar cómo de bien funciona nuestra ecuación para la predicción de nuevos valores. Para ello, utilizaremos nuestro set de prueba.
+
+ 
