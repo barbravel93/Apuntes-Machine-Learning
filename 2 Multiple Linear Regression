@@ -1,0 +1,38 @@
+# Damos por sentado que ya hemos importado los packages necesarios, que hemos descargado y dataframeado los datos y que hemos sumarizado los datos, seleccionado y dataframeado /
+  #/los más relevantes y que los hemos grafiqueado para observar correlaciones entre las variables independientes y la dependiente. También, hemos cortado el dataset en test&train/
+  #/y analizado la distribución de la porción de datos de entrenamiento, como hicimos en la Regresión Linear Simple.
+
+#Vamos a centrarnos en una Regresión Linear Múltiple, en la que más de una variable independiente afecta al comportamiento de la dependiente.
+  #Lo primero que haremos, será extraer los tres coeficientes de las tres variables sobre las que se fundamentará nuestra predicción:
+  from sklearn import linear_model
+  regr = linear_model.LinearRegression()
+  x = np.asanyarray(train[['ENGINESIZE','CYLINDERS','FUELCONSUMPTION_COMB']])
+  y = np.asanyarray(train[['CO2EMISSIONS']])
+  regr.fit (x, y)
+  print ('Coefficients: ', regr.coef_)
+  #El OUT de estas lineas es: [Coefficients:  [[10.34160868  8.23409658  9.54298258]]]
+  
+# Utilizamos el método Ordinary Least Squares (OLS) para minimizar el error residual
+y_hat= regr.predict(test[['ENGINESIZE','CYLINDERS','FUELCONSUMPTION_COMB']])
+x = np.asanyarray(test[['ENGINESIZE','CYLINDERS','FUELCONSUMPTION_COMB']])
+y = np.asanyarray(test[['CO2EMISSIONS']])
+print("Residual sum of squares: %.2f"
+      % np.mean((y_hat - y) ** 2))
+# Explained variance score: 1 is perfect prediction
+print('Variance score: %.2f' % regr.score(x, y))
+#OUT: [Residual sum of squares: 400.12 \ Variance score: 0.89]
+
+#Hacemos lo mismo pero cambiando los parámetros para ver si diferentes combinaciones producen mejores resultados
+regr=linear_model.LinearRegression()
+x=np.asanyarray(train[['ENGINESIZE','CYLINDERS','FUELCONSUMPTION_CITY','FUELCONSUMPTION_HWY']])
+y=np.asanyarray(train[['CO2EMISSIONS']])
+regr.fit(x, y)
+print('Coefficients: ', regr.coef_)
+#OUT = [Coefficients:  [[10.36292429  8.06753645  5.64982507  3.7726723 ]]]
+
+y_=regr.predict(test[['ENGINESIZE','CYLINDERS','FUELCONSUMPTION_CITY','FUELCONSUMPTION_HWY']])
+x=np.asanyarray(test[['ENGINESIZE','CYLINDERS','FUELCONSUMPTION_CITY','FUELCONSUMPTION_HWY']])
+y=np.asanyarray(test[['CO2EMISSIONS']])
+print('Residual sum of squares: %.f'% np.mean((y_ - y)**2))
+print('Variance score: %.2f' % regr.score(x, y))
+#OUT = [Residual sum of squares: 399 \ Variance score: 0.89]
