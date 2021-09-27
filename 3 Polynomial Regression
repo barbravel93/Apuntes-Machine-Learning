@@ -1,0 +1,90 @@
+#Comenzamos importando los paquetes necesarios. Descargamos los datos, dataframeamos, analizamos superficialmente, seleccionamos las columnas relevantes,\
+  #\, realizamos un primer análisis visual y creamos los sets de entrenamiento y prueba (en 1).
+
+#Vamos a utilizar la función PolynomialFeatures() para obtener algunas matrices consistentes en todas las combinaciones polinómicas de las características posibles dentro\
+  #\del rango polinómico especificado.
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn import linear_model
+train_x = np.asanyarray(train[['ENGINESIZE']])
+train_y = np.asanyarray(train[['CO2EMISSIONS']])
+
+test_x = np.asanyarray(test[['ENGINESIZE']])
+test_y = np.asanyarray(test[['CO2EMISSIONS']])
+
+
+poly = PolynomialFeatures(degree=2)
+train_x_poly = poly.fit_transform(train_x)
+train_x_poly
+
+#[OUT]: array([[ 1.  ,  2.  ,  4.  ],
+       [ 1.  ,  2.4 ,  5.76],
+       [ 1.  ,  1.5 ,  2.25],
+       ...,
+       [ 1.  ,  3.  ,  9.  ],
+       [ 1.  ,  3.2 , 10.24],
+       [ 1.  ,  3.2 , 10.24]])
+
+# Ya que la regresión polinómica es un caso especial de la regresión linear (? !!! DOCUMENTARSE PARA ENTENDER ESTO), podemos utilizar la función LinearRegression()
+clf = linear_model.LinearRegression()
+train_y_ = clf.fit(train_x_poly, train_y)
+# The coefficients
+print ('Coefficients: ', clf.coef_)
+print ('Intercept: ',clf.intercept_)
+    
+    #[OUT]: Coefficients:  [[ 0.         49.93325178 -1.387118  ]] \ Intercept:  [106.96620844]
+
+#Sabemos que los parámetros de una recta (curva) de ajuste son los coeficientes y el interceptor. Conociendo estos valores, podemos trazar la recta de ajuste.
+plt.scatter(train.ENGINESIZE, train.CO2EMISSIONS,  color='blue')
+XX = np.arange(0.0, 10.0, 0.1)
+yy = clf.intercept_[0]+ clf.coef_[0][1]*XX+ clf.coef_[0][2]*np.power(XX, 2)
+plt.plot(XX, yy, '-r' )
+plt.xlabel("Engine size")
+plt.ylabel("Emission")
+
+#Hecho esto, es tiempo de evaluar nuestro modelo
+from sklearn.metrics import r2_score
+
+test_x_poly = poly.fit_transform(test_x)
+test_y_ = clf.predict(test_x_poly)
+
+print("Mean absolute error: %.2f" % np.mean(np.absolute(test_y_ - test_y)))
+print("Residual sum of squares (MSE): %.2f" % np.mean((test_y_ - test_y) ** 2))
+print("R2-score: %.2f" % r2_score(test_y,test_y_ ) )
+
+   #[OUT]: Mean absolute error: 23.68 \ Residual sum of squares (MSE): 956.31 \ R2-score: 0.72
+   
+#Hagamos ahora lo mismo, pero con un polinomio de grado 3
+
+poly3=PolynomialFeatures(degree=3)
+train_x_poly3=poly3.fit_transform(train_x)
+train_x_poly3
+  #[OUT]: array([[ 1.   ,  2.4  ,  5.76 , 13.824],
+       [ 1.   ,  1.5  ,  2.25 ,  3.375],
+       [ 1.   ,  3.5  , 12.25 , 42.875],
+       ...,
+       [ 1.   ,  3.   ,  9.   , 27.   ],
+       [ 1.   ,  3.2  , 10.24 , 32.768],
+       [ 1.   ,  3.2  , 10.24 , 32.768]])
+       
+clf3=linear_model.LinearRegression()
+train_y3_=clf3.fit(train_x_poly3, train_y)
+print ('Coefficients: ', clf3.coef_)
+print ('Intercept: ',clf3.intercept_)
+  #[OUT]: Coefficients:  [[ 0.         25.64467989  5.38919378 -0.57027969]] \ Intercept:  [134.20038344]
+  
+plt.scatter(train.ENGINESIZE, train.CO2EMISSIONS,  color='blue')
+XX = np.arange(0.0, 10.0, 0.1)
+yy = clf3.intercept_[0]+ clf3.coef_[0][1]*XX + clf3.coef_[0][2]*np.power(XX, 2) + clf3.coef_[0][3]*np.power(XX, 3)
+plt.plot(XX, yy, '-r' )
+plt.xlabel("Engine size")
+plt.ylabel("Emission")
+
+test_x_poly3=poly3.fit_transform(test_x)
+test_y3_=clf3.predict(test_x_poly3)
+
+print("Mean absolute error: %.2f" % np.mean(np.absolute(test_y3_ - test_y)))
+print("Residual sum of squares (MSE): %.2f" % np.mean((test_y3_ - test_y) ** 2))
+print("R2-score: %.2f" % r2_score(test_y,test_y3_ ) )
+    #[OUT]: Mean absolute error: 24.35
+            Residual sum of squares (MSE): 936.36
+            R2-score: 0.75
