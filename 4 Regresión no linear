@@ -123,4 +123,26 @@ plt.xlabel('Year')
 plt.show()
 
 #Hecho esto, es tiempo de calcular la precisión del modelo
+    # primero partimos los datos en train/test
+    msk = np.random.rand(len(df)) < 0.8
+    train_x = xdata[msk]
+    test_x = xdata[~msk]
+    train_y = ydata[msk]
+    test_y = ydata[~msk]
 
+    #Ahora construimos el modelo utilizando el set de entrenamiento
+    popt, pcov = curve_fit(sigmoid, train_x, train_y)
+    
+    #Realizamos la predicción utiliando el set de prueba
+    y_hat = sigmoid(test_x, *popt)
+    
+    # Por último, evaluamos el modelo
+    print("Mean absolute error: %.2f" % np.mean(np.absolute(y_hat - test_y)))
+    print("Residual sum of squares (MSE): %.2f" % np.mean((y_hat - test_y) ** 2))
+    from sklearn.metrics import r2_score
+    print("R2-score: %.2f" % r2_score(y_hat , test_y) )
+            #[OUT]: [Mean absolute error: 0.03
+                     Residual sum of squares (MSE): 0.00
+                     R2-score: 0.98]
+# Dado que R2 tiene un valor de 0.98, siendo 1 el encaje perfecto, encontramos que nuestro modelo es bastante preciso. Tanto que incluso podríamos sospechar de overfitting.
+    
