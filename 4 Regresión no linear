@@ -1,0 +1,76 @@
+# El primer paso será importar las bibliotecas necesarias
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+#Para poder contrastar posteriormente cómo difiere el código de una función linear y una no linear, tracemos una del primer tipo:
+x = np.arange(-5.0, 5.0, 0.1)
+y = 2*(x) + 3
+y_noise = 2 * np.random.normal(size=x.size)
+ydata = y + y_noise
+#plt.figure(figsize=(8,6))
+plt.plot(x, ydata,  'bo')
+plt.plot(x,y, 'r') 
+plt.ylabel('Dependent Variable')
+plt.xlabel('Independent Variable')
+plt.show()
+
+# Dado que las relaciones no lineales pueden tener formas variopintas, veamos algunos ejemplos introductorios.
+    #Ejemplo 1: Trazar el gráfico de una función cúbica
+    x = np.arange(-5.0, 5.0, 0.1)
+    y = 1*(x**3) + 1*(x**2) + 1*x + 3
+    y_noise = 20 * np.random.normal(size=x.size)
+    ydata = y + y_noise
+    plt.plot(x, ydata,  'bo')
+    plt.plot(x,y, 'r') 
+    plt.ylabel('Dependent Variable')
+    plt.xlabel('Independent Variable')
+    plt.show()
+    
+    #Ejemplo 2: Función cuadrática
+    x = np.arange(-5.0, 5.0, 0.1)
+    y = np.power(x,2)
+    y_noise = 2 * np.random.normal(size=x.size)
+    ydata = y + y_noise
+    plt.plot(x, ydata,  'bo')
+    plt.plot(x,y, 'r') 
+    plt.ylabel('Dependent Variable')
+    plt.xlabel('Independent Variable')
+    plt.show()
+    
+    #Ejemplo 3: Exponencial
+    X = np.arange(-5.0, 5.0, 0.1)
+    Y= np.exp(X)
+    plt.plot(X,Y) 
+    plt.ylabel('Dependent Variable')
+    plt.xlabel('Independent Variable')
+    plt.show()
+    
+    #Ejemplo 4: Logarítmica
+    X = np.arange(-5.0, 5.0, 0.1)
+    Y = np.log(X)
+    plt.plot(X,Y) 
+    plt.ylabel('Dependent Variable')
+    plt.xlabel('Independent Variable')
+    plt.show()
+    
+    #Ejemplo 5: Sigmoidal o logística
+    X = np.arange(-5.0, 5.0, 0.1)
+    Y = 1-4/(1+np.power(3, X-2))
+    plt.plot(X,Y)  
+    plt.ylabel('Dependent Variable')
+    plt.xlabel('Independent Variable')
+    plt.show()
+    
+# Ahora veamos un ejemplo con set de datos real que nos ilustre cómo resolver una relación de este tipo en el mundo real
+#El primer paso va a ser, como siempre, importar los paquetes requeridos, descargar los datos que vamos a usar, dataframearlos y echarles un primer vistazo
+  import numpy as np
+  import pandas as pd
+
+  #downloading dataset
+  !wget -nv -O china_gdp.csv https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-ML0101EN-SkillsNetwork/labs/Module%202/data/china_gdp.csv
+    
+  df = pd.read_csv("china_gdp.csv")
+  df.head(10)
+  
+#Hecho esto, se 
