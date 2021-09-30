@@ -1,0 +1,86 @@
+#El primer paso será instalar scikitlearn
+!pip install scikit-learn==0.23.1
+
+#A continuación, importamos las bibliotecas que utilizaremos
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+from sklearn import preprocessing
+%matplotlib inline
+
+#Descargamos el set de datos
+!wget -O teleCust1000t.csv https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-ML0101EN-SkillsNetwork/labs/Module%203/data/teleCust1000t.csv
+
+#Dataframeamos el set de datos y le echamos un primer vistazo
+df = pd.read_csv('teleCust1000t.csv')
+df.head()
+
+#A continuación, vamos a observar cuantos valores tenemos en cada una de las categorías en las que basaremos nuestra clasificación (custcat)
+df['custcat'].value_counts()
+
+#También podemos hacer una mejor exploración visual mediante el trazado gráfico de nuestros datos
+df.hist(column='income', bins=50)
+
+#Ahora, veamos las variables de las que disponemos y seleccionaremos aquellas que nos resulten más relevantes para nuestra predicción
+df.columns
+#[OUT]: Index(['region', 'tenure', 'age', 'marital', 'address', 'income', 'ed', 'employ', 'retire', 'gender', 'reside', 'custcat'], dtype='object')
+  #Para usar scikitlearn tenemos que convertir nuestro df en una numpy array
+  X = df[['region', 'tenure','age', 'marital', 'address', 'income', 'ed', 'employ','retire', 'gender', 'reside']] .values  #.astype(float)
+  X[0:5]
+  #Veamos cuales son nuestras etiquetas
+  y = df['custcat'].values
+  y[0:5]
+
+#Procedemos a normalizar nuestros datos
+y = df['custcat'].values
+y[0:5]
+#[OUT]: array([[-0.02696767, -1.055125  ,  0.18450456,  1.0100505 , -0.25303431,
+        -0.12650641,  1.0877526 , -0.5941226 , -0.22207644, -1.03459817,
+        -0.23065004],
+       [ 1.19883553, -1.14880563, -0.69181243,  1.0100505 , -0.4514148 ,
+         0.54644972,  1.9062271 , -0.5941226 , -0.22207644, -1.03459817,
+         2.55666158],
+       [ 1.19883553,  1.52109247,  0.82182601,  1.0100505 ,  1.23481934,
+         0.35951747, -1.36767088,  1.78752803, -0.22207644,  0.96655883,
+        -0.23065004],
+       [-0.02696767, -0.11831864, -0.69181243, -0.9900495 ,  0.04453642,
+        -0.41625141, -0.54919639, -1.09029981, -0.22207644,  0.96655883,
+        -0.92747794],
+       [-0.02696767, -0.58672182, -0.93080797,  1.0100505 , -0.25303431,
+        -0.44429125, -1.36767088, -0.89182893, -0.22207644, -1.03459817,
+         1.16300577]])
+
+#Llegados a este punto, es tiempo de dividir nuestro set de datos en train/test sets
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.2, random_state=4)
+print ('Train set:', X_train.shape,  y_train.shape)
+print ('Test set:', X_test.shape,  y_test.shape)
+
+#Ya estamos en posición de comenzar con nuestra clasificación KNN
+  #Comenzamos importando la boblioteca que utiliaremos
+  from sklearn.neighbors import KNeighborsClassifier
+  
+  #Pasamos a entrenar el algoritmo con nuestros datos. Por ahora, daremos a K un valor igual a 4
+  k = 4
+  neigh = KNeighborsClassifier(n_neighbors = k).fit(X_train,y_train)
+  neigh
+  
+  #Hagamos nuestra primera predicción
+  yhat = neigh.predict(X_test)
+  yhat[0:5]
+  
+  #Hecho esto, evaluemos el modelo
+  from sklearn import metrics
+  print("Train set Accuracy: ", metrics.accuracy_score(y_train, neigh.predict(X_train)))
+  print("Test set Accuracy: ", metrics.accuracy_score(y_test, yhat))
+  #[OUT]: Train set Accuracy:  0.5475
+          Test set Accuracy:  0.32
+  
+#Ahora probaremos a entrenar el algoritmo con un valor de K diferente. En este caso, K=6
+k = 6
+neigh6 = KNeighborsClassifier(n_neighbors = k).fit(X_train,y_train)
+yhat6 = neigh6.predict(X_test)
+print("Train set accuracy: ", metrics.accuracy_score(y_train, neigh6.predict(X_train)))
+print("Test set accuracy: ", metrics.accuracy_score(y_test, yhat6))
+#[OUT]: Train set accuracy:  0.51625 \ Test set accuracy:  0.31
