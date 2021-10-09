@@ -36,6 +36,7 @@ The version of Logistic Regression in Scikit-learn, support regularization. Regu
     <ul> <li> The integer labels for cluster membership of each sample.» </li> </ul> 
 </ul>
 
+<br>
 «The <code>KMeans()</code> class has many parameters that can be used, but we will be using these three:
 
 <ul>
