@@ -16,3 +16,23 @@ In multilabel classification, the function returns the subset accuracy. If the e
 The version of Logistic Regression in Scikit-learn, support regularization. Regularization is a technique used to solve the overfitting problem of machine learning models. C parameter indicates inverse of regularization strength which must be a positive float. Smaller values specify stronger regularization.»
 
 «<code>predict_proba()</code> returns estimates for all classes, ordered by the label of classes. So, the first column is the probability of class 0, P(Y=0|X), and second column is probability of class 1, P(Y=1|X)»
+
+
+### 9 K-Means
+«The <code>make_blobs()</code> class can take in many inputs, but we will be using these specific ones:
+<ul>
+    <li> <b>n_samples</b>: The total number of points equally divided among clusters. </li>
+    <ul> <li> Value will be: 5000 </li> </ul>
+    <li> <b>centers</b>: The number of centers to generate, or the fixed center locations. </li>
+    <ul> <li> Value will be: [[4, 4], [-2, -1], [2, -3],[1,1]] </li> </ul>
+    <li> <b>cluster_std</b>: The standard deviation of the clusters. </li>
+    <ul> <li> Value will be: 0.9 </li> </ul>
+</ul>
+<br>
+<b> <u> Output </u> </b>
+<ul>
+    <li> <b>X</b>: Array of shape [n_samples, n_features]. (Feature Matrix)</li>
+    <ul> <li> The generated samples. </li> </ul> 
+    <li> <b>y</b>: Array of shape [n_samples]. (Response Vector)</li>
+    <ul> <li> The integer labels for cluster membership of each sample.» </li> </ul> 
+</ul>
