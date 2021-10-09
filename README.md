@@ -28,7 +28,6 @@ The version of Logistic Regression in Scikit-learn, support regularization. Regu
     <li> <b>cluster_std</b>: The standard deviation of the clusters. </li>
     <ul> <li> Value will be: 0.9 </li> </ul>
 </ul>
-<br>
 <b> <u> Output </u> </b>
 <ul>
     <li> <b>X</b>: Array of shape [n_samples, n_features]. (Feature Matrix)</li>
