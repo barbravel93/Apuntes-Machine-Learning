@@ -1,0 +1,144 @@
+"""
+Vamos a proceder a ver cómo llevar a cabo la segmentación de clientes mediante K-means, una popular técnica de clústering. 
+Se verán dos ejemplos, el primero realizado con datos aleatoriamente generados y el segundo, con una base de datos de clientes que recrea los datos reales de una compañía.
+"""
+
+# En primer lugar, importamos las bibliotecas necesarias
+import random 
+import numpy as np 
+import matplotlib.pyplot as plt 
+from sklearn.cluster import KMeans 
+from sklearn.datasets.samples_generator import make_blobs 
+%matplotlib inline
+
+#EJEMPLO 1:
+#Vamos a crear unos datos aleatorios con la siguiente línea
+np.random.seed(0)
+
+#A continuación, utilizamos el método make_blobs(<explicado en readme>) para crear clústeres aleatorios
+X, y = make_blobs(n_samples=5000, centers=[[4,4], [-2, -1], [2, -3], [1, 1]], cluster_std=0.9)
+
+#Lo siguiente será representar gráficamente la anterior operación
+plt.scatter(X[:, 0], X[:, 1], marker='.')
+
+#Ahora aplicaremos el método KMeans(<EcplicadoenReadMe>)
+k_means = KMeans(init = "k-means++", n_clusters = 4, n_init = 12)
+#Y ajustamos el modelo con la matriz de características que creamos previamente (X)
+k_means.fit(X)
+
+#Ahora utilizaremos el atributo K_means.labels_ para etiquetar nuestros puntos
+k_means_labels = k_means.labels_
+k_means_labels
+
+#También, obtendremos las coordenadas de nuestros clusters utilizando el atributo k_means.cluster_centers_
+k_means_cluster_centers = k_means.cluster_centers_
+k_means_cluster_centers
+
+#Ahora que ya tenemos los clusters agrupados, vamos a representar gráficamente el modelo:
+  # Iniciamos el gráfico con las dimensiones especificadas
+  fig = plt.figure(figsize=(6, 4))
+
+  # Mediante Colors daremos color a las diferentes etiquetas. Fijamos (k_means_labels) para obtener las etiquetas únicas.
+  colors = plt.cm.Spectral(np.linspace(0, 1, len(set(k_means_labels))))
+
+  # Creamos la gráfica
+  ax = fig.add_subplot(1, 1, 1)
+
+  # Empezamos el loop que trazará los puntos y los centroides:
+  # k tendrá un rango de 0 a 3 que le permitirá encajar cada punto en su cluster correspondiente
+  for k, col in zip(range(len([[4,4], [-2, -1], [2, -3], [1, 1]])), colors):
+    # Creamos una lista con todos los puntos en la cual, cuando un punto corresponde a un cluster N (ej. cluster 0), se etiqueta como verdadera. Si no, como falsa.
+    my_members = (k_means_labels == k)
+    
+    # Definimos el centroide
+    cluster_center = k_means_cluster_centers[k]
+    
+    # Indicamos cómo representar los puntos con su correspondiente color
+    ax.plot(X[my_members, 0], X[my_members, 1], 'w', markerfacecolor=col, marker='.')
+    
+    # Esoecificamos cómo representar los centroides con su respectivo color
+    ax.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col,  markeredgecolor='k', markersize=6)
+
+  # Damos título a la gráfica
+  ax.set_title('KMeans')
+
+  # Quitamos los ticks de x
+  ax.set_xticks(())
+
+  # Quitamos los ticks de y
+  ax.set_yticks(())
+
+  # Mostramos el gráfico
+  plt.show()
+
+#Podemos repetir el proceso, por ejemplo, fijando k en 3
+k_means3 = KMeans(init = "k-means++", n_clusters = 3, n_init = 12)
+k_means3.fit(X)
+fig = plt.figure(figsize=(6, 4))
+colors = plt.cm.Spectral(np.linspace(0, 1, len(set(k_means3.labels_))))
+ax = fig.add_subplot(1, 1, 1)
+for k, col in zip(range(len(k_means3.cluster_centers_)), colors):
+    my_members = (k_means3.labels_ == k)
+    cluster_center = k_means3.cluster_centers_[k]
+    ax.plot(X[my_members, 0], X[my_members, 1], 'w', markerfacecolor=col, marker='.')
+    ax.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col,  markeredgecolor='k', markersize=6)
+plt.show()
+
+
+#EJEMPLO 2
+#Lo primero será descargar nuestro set de datos
+!wget -O Cust_Segmentation.csv https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-ML0101EN-SkillsNetwork/labs/Module%204/data/Cust_Segmentation.csv
+
+#Leemos nuestros datos
+import pandas as pd
+cust_df = pd.read_csv("Cust_Segmentation.csv")
+cust_df.head()
+
+#los pre procesamos, para lo cual quitaremos 'adress', ya que, por ser categórica, no nos permitirá trabajar correctamente al manejar distancias euclideas
+df = cust_df.drop('Address', axis=1)
+df.head()
+
+#Vamos a normalizar nuestros datos mediante StandardScaler(). La normalización ayuda a nuestros algoritmos matemáticos a interpretar características con diferentes magnitudes y distribuciones.
+from sklearn.preprocessing import StandardScaler
+X = df.values[:,1:]
+X = np.nan_to_num(X)
+Clus_dataSet = StandardScaler().fit_transform(X)
+Clus_dataSet
+
+#Procedemos al modelado, para lo que nos ayudaremos, de nuevo, del método KMeans()
+clusterNum = 3
+k_means = KMeans(init = "k-means++", n_clusters = clusterNum, n_init = 12)
+k_means.fit(X)
+labels = k_means.labels_
+print(labels)
+
+#Asignamos las etiquetas que acabamos de obtener a cada columna de nuestro marco de datos
+df["Clus_km"] = labels
+df.head(5)
+
+#Podemos comprobar el valor aproximado de nuestros centroides al revisar la media de cada una de las etiquetas que acabamos de asignar
+df.groupby('Clus_km').mean()
+
+#Procedemos a ojear la distribución de clientes basándonos en su edad y sus ingresos
+area = np.pi * ( X[:, 1])**2  
+plt.scatter(X[:, 0], X[:, 3], s=area, c=labels.astype(np.float), alpha=0.5)
+plt.xlabel('Age', fontsize=18)
+plt.ylabel('Income', fontsize=16)
+
+plt.show()
+
+#También, si nos resultase de interés, podemos trazar la gráfica en 3D añadiendo una nueva característica. En este caso, la educación.
+from mpl_toolkits.mplot3d import Axes3D 
+fig = plt.figure(1, figsize=(8, 6))
+plt.clf()
+ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
+
+plt.cla()
+# plt.ylabel('Age', fontsize=18)
+# plt.xlabel('Income', fontsize=16)
+# plt.zlabel('Education', fontsize=16)
+ax.set_xlabel('Education')
+ax.set_ylabel('Age')
+ax.set_zlabel('Income')
+
+ax.scatter(X[:, 1], X[:, 0], X[:, 3], c= labels.astype(np.float))
