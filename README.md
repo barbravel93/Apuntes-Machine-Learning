@@ -36,3 +36,17 @@ The version of Logistic Regression in Scikit-learn, support regularization. Regu
     <li> <b>y</b>: Array of shape [n_samples]. (Response Vector)</li>
     <ul> <li> The integer labels for cluster membership of each sample.» </li> </ul> 
 </ul>
+
+«The <code>KMeans()</code> class has many parameters that can be used, but we will be using these three:
+
+<ul>
+    <li> <b>init</b>: Initialization method of the centroids. </li>
+    <ul>
+        <li> Value will be: "k-means++" </li>
+        <li> k-means++: Selects initial cluster centers for k-mean clustering in a smart way to speed up convergence.</li>
+    </ul>
+    <li> <b>n_clusters</b>: The number of clusters to form as well as the number of centroids to generate. </li>
+    <ul> <li> Value will be: 4 (since we have 4 centers)</li> </ul>
+    <li> <b>n_init</b>: Number of time the k-means algorithm will be run with different centroid seeds. The final results will be the best output of n_init consecutive runs in terms of inertia. </li>
+    <ul> <li> Value will be: 12 »</li> </ul>
+</ul>
