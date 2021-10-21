@@ -1,0 +1,20 @@
+#Nuevamente, vamos a adquirir los datos y a limpiarlos para dejarlos preparados. Ya que los pasos son idénticos al tema 12, consultar ahí la primera parte.
+
+#Hechos los pasos anteriores, comenzamos creando un user imput artificial al que hacer la recomendación. Nuevamente, seguimos los mismos pasos que ene l anterior tema, hasta
+  #haber conjugado los dataframes.
+  
+#Ahora sí, procedemos a localizar a los usuarios que han visto las mismas películas, para conocer los vecindarios
+userSubset = ratings_df[ratings_df['movieId'].isin(inputMovies['movieId'].tolist())]
+userSubset.head()
+
+#Ahora agrupamos las filas por user id
+userSubsetGroup = userSubset.groupby(['userId'])
+
+#Veamos un ejemplo de estos users, por ejemplo, al que corresponde el ID 1130
+userSubsetGroup.get_group(1130)
+
+#Vamos a ordenar los grupos, de modo que aquellos usuarios que tengan más películas en común tengan prioridad
+userSubsetGroup = sorted(userSubsetGroup,  key=lambda x: len(x[1]), reverse=True)
+
+#Procedemos a comparar la lista de usuarios con nuestro usuario ficticio para encontrar los usuarios que más se le asemejan.
+  #Para ello, vamos a utilizar el coeficiente de correlación de Pearson 
