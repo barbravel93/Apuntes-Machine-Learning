@@ -18,3 +18,80 @@ userSubsetGroup = sorted(userSubsetGroup,  key=lambda x: len(x[1]), reverse=True
 
 #Procedemos a comparar la lista de usuarios con nuestro usuario ficticio para encontrar los usuarios que más se le asemejan.
   #Para ello, vamos a utilizar el coeficiente de correlación de Pearson 
+#Seleccionamos un subconjunto de usuarios a través de los que iterar 
+userSubsetGroup = userSubsetGroup[0:100]
+
+#Ahora calculamos la correlación de Pearson entre nuestro usuario ficticio y el subconjunto que hemos seleccionado.
+  #Almacenamos los resultados en un diccionario, donde la clave es el id de usuario y el valor es el coeficiente de Pearson
+#Store the Pearson Correlation in a dictionary, where the key is the user Id and the value is the coefficient
+pearsonCorrelationDict = {}
+
+#For every user group in our subset
+for name, group in userSubsetGroup:
+    #Comenzamos ordenando la entrada y el grupo de usuarios actual para que los valores no se mezclen más adelante.
+    group = group.sort_values(by='movieId')
+    inputMovies = inputMovies.sort_values(by='movieId')
+    #Obtenemos la N para la fórmula
+    nRatings = len(group)
+    #Obtenemos las puntuaciones de las reseñas de las películas que ambos tienen en común
+    temp_df = inputMovies[inputMovies['movieId'].isin(group['movieId'].tolist())]
+    #Y las guardamos en una variable de búfer temporal en un formato de lista para facilitar cálculos futuros
+    tempRatingList = temp_df['rating'].tolist()
+    #Incluímos también las reseñas del grupo de usuarios actual en un formato de lista.
+    tempGroupList = group['rating'].tolist()
+    #Ahora vamos a calcular la correlación de Pearson entre dos usuarios, los llamados x e y
+    Sxx = sum([i**2 for i in tempRatingList]) - pow(sum(tempRatingList),2)/float(nRatings)
+    Syy = sum([i**2 for i in tempGroupList]) - pow(sum(tempGroupList),2)/float(nRatings)
+    Sxy = sum( i*j for i, j in zip(tempRatingList, tempGroupList)) - sum(tempRatingList)*sum(tempGroupList)/float(nRatings)
+    
+    #Si el denominador es diferente de cero, divida, de lo contrario, la correlación es 0.
+    if Sxx != 0 and Syy != 0:
+        pearsonCorrelationDict[name] = Sxy/sqrt(Sxx*Syy)
+    else:
+        pearsonCorrelationDict[name] = 0
+        
+pearsonCorrelationDict.items()
+
+pearsonDF = pd.DataFrame.from_dict(pearsonCorrelationDict, orient='index')
+pearsonDF.columns = ['similarityIndex']
+pearsonDF['userId'] = pearsonDF.index
+pearsonDF.index = range(len(pearsonDF))
+pearsonDF.head()
+
+#Hecho esto, veamos los 50 usuarios más semejantes a nuestro input user
+topUsers=pearsonDF.sort_values(by='similarityIndex', ascending=False)[0:50]
+topUsers.head()
+
+#Ahora necesitamos ver qué películas han visto los usuarios en nuestro pearsonDF desde el marco de datos de calificaciones 
+  #y luego almacenar su correlación en una nueva columna llamada _similarityIndex ". Para ello, conjugaremos tablas.
+topUsersRating=topUsers.merge(ratings_df, left_on='userId', right_on='userId', how='inner')
+topUsersRating.head()
+
+#Ahora todo lo que tenemos que hacer es simplemente multiplicar la calificación de la película por su peso (el índice de similitud), 
+  #luego sumar las nuevas calificaciones y dividirlo por la suma de los pesos.
+  #Podemos hacer esto fácilmente simplemente multiplicando dos columnas, luego agrupando el marco de datos por movieId y luego dividiendo dos columnas
+
+#Multiplicamos la similitud por las calificaciones de los usuarios.
+topUsersRating['weightedRating'] = topUsersRating['similarityIndex']*topUsersRating['rating']
+topUsersRating.head()
+
+#Aplicamos una suma a los usuarios principales después de agruparla por userId
+tempTopUsersRating = topUsersRating.groupby('movieId').sum()[['similarityIndex','weightedRating']]
+tempTopUsersRating.columns = ['sum_similarityIndex','sum_weightedRating']
+tempTopUsersRating.head()
+
+#Creamos un marco de datos vacío
+recommendation_df = pd.DataFrame()
+#Ahora tomamos el promedio ponderado
+recommendation_df['weighted average recommendation score'] = tempTopUsersRating['sum_weightedRating']/tempTopUsersRating['sum_similarityIndex']
+recommendation_df['movieId'] = tempTopUsersRating.index
+recommendation_df.head()
+
+#Ya podemos ver las 20 primeras películas que nuestro algoritmo recomendaría
+recommendation_df = recommendation_df.sort_values(by='weighted average recommendation score', ascending=False)
+recommendation_df.head(10)
+
+#Ya que solo vemos los datos, pero no el título, combinamos tablas para tener un fácil acceso al título
+movies_df.loc[movies_df['movieId'].isin(recommendation_df.head(10)['movieId'].tolist())]
+        
+  
