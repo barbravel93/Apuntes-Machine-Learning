@@ -1,0 +1,130 @@
+#Vaos a proceder a construir un algoritmo de recomendación basado en el contenido que consume un usuario concreto. Para ello, utilizaremos una base de datos de MovieLens.
+  #Esta base de datos tiene la particularidad de que viene comprimida en un formato zip. Así, para obtener y descargar los datos usaremos las siguientes líneas de código.
+!wget -O moviedataset.zip https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-ML0101EN-SkillsNetwork/labs/Module%205/data/moviedataset.zip
+print('unziping ...')
+!unzip -o -j moviedataset.zip 
+
+#Ahora, vamos a descargar las bibliotecas que necesitamos para poder trabajar con los datos
+  #Biblioteca de manipulación de marcos de datos
+import pandas as pd
+  #De la biblioteca de funciones matemáticas, solo necesitaremos la función sqrt, así que importemos solo eso
+from math import sqrt
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+#Ahora, dataframeemos los datos
+  #Almacenar la información de la película en un marco de datos de pandas
+  movies_df = pd.read_csv('movies.csv')
+  #Almacenar la información del usuario en un marco de datos de pandas
+  ratings_df = pd.read_csv('ratings.csv')
+  movies_df.head()
+  
+#Vemos con este primer análisis que el marco de datos tiene el defecto de que el año de estreno de la película se encuentra almacenado junto al título. 
+  #Procedemos a almacenarlo en una columna propia
+#Vamos a usar expresiones regulares para encontrar un año almacenado entre paréntesis: especificamos los paréntesis para no entrar en conflicto con películas que tienen años en sus títulos.
+movies_df['year'] = movies_df.title.str.extract('(\(\d\d\d\d\))',expand=False)
+#Quitamos los paréntesis
+movies_df['year'] = movies_df.year.str.extract('(\d\d\d\d)',expand=False)
+#Eliminamos los años de la columna 'título'
+movies_df['title'] = movies_df.title.str.replace('(\(\d\d\d\d\))', '')
+#Aplicamos la función de tira para deshacerse de cualquier carácter de espacio en blanco final que pueda haber aparecido
+movies_df['title'] = movies_df['title'].apply(lambda x: x.strip())
+movies_df.head()
+
+#Ahora, vemos que los géneros se encuentran separados con el formato x|y|z. Procedemos a convertirlos en una lista, [x, y, z]
+  #Cada género está separado por un '|' así que simplemente tenemos que llamar a la función de división en '|'
+movies_df['genres'] = movies_df.genres.str.split('|')
+movies_df.head()
+
+#Ahora podemos proceder a utilizar la técnica de One Hot Encoding para convertir estas listas en vectores, en los que cada género cuente con una columna que pueda ser marcada...
+  #...en función de si dicha película pertenece o no a cada género, siendo 1 V y 0 F.
+#Copiamos el marco de datos de la película en uno nuevo, ya que no necesitaremos usar la información de género en nuestro primer caso.
+moviesWithGenres_df = movies_df.copy()
+#Para cada fila del marco de datos, recorremos la lista de géneros y colocamos un 1 en la columna correspondiente.
+for index, row in movies_df.iterrows():
+    for genre in row['genres']:
+        moviesWithGenres_df.at[index, genre] = 1
+#Completamos los valores de NaN con 0 para mostrar que una película no tiene el género de esa columna
+moviesWithGenres_df = moviesWithGenres_df.fillna(0)
+moviesWithGenres_df.head()
+
+#Ahora, echemos un ojo al marco de datos de las valoraciones
+ratings_df.head()
+
+#Vemos que cada fila tiene un id de usuario asociado con al menos una película, una calificación y una marca de tiempo que muestra cuando la revisaron...
+  #...No necesitaremos esa marca de tiempo (timestamp), así que procedemos a eliminar esa columna.
+ratings_df = ratings_df.drop('timestamp', 1)
+ratings_df.head()
+
+#Ahora que hemos limpiado y preprocesado nuestros datos, podemos comenzar a construir el algoritmo de recomendación basado en en contenido o los items consumidos por el U.
+#Para ver cómo funciona, creemos el imput de un usuario ficticio al que le queremos recomendar una película predeterminada
+userInput = [
+            {'title':'Breakfast Club, The', 'rating':5},
+            {'title':'Toy Story', 'rating':3.5},
+            {'title':'Jumanji', 'rating':2},
+            {'title':"Pulp Fiction", 'rating':5},
+            {'title':'Akira', 'rating':4.5}
+         ] 
+inputMovies = pd.DataFrame(userInput)
+inputMovies
+
+#Ahora vamos a añadir este imput a nuestro anterior marco de datos
+#Filtramos las películas por título
+inputId = movies_df[movies_df['title'].isin(inputMovies['title'].tolist())]
+#Luego lo fusionamos para que podamos obtener el movieId. Lo fusionaremos implícitamente por título.
+inputMovies = pd.merge(inputId, inputMovies)
+#Eliminamos información que no usaremos del marco de datos de entrada
+inputMovies = inputMovies.drop('genres', 1).drop('year', 1)
+#Si una película que agregó anteriormente no está aquí, es posible que no esté en el merco de datos original o podría estar escrito de manera diferente, verifique las mayúsculas.
+inputMovies
+
+#Para entender las preferencias del imput, buscamos el subconjunto de películas que nuestro usuario ha visto desde el marco de datos que contiene géneros definidos con valores binarios
+#Filtramos las películas desde el input
+userMovies = moviesWithGenres_df[moviesWithGenres_df['movieId'].isin(inputMovies['movieId'].tolist())]
+userMovies
+
+#Ya que solonecesitaremos la tabla de géneros real, vamos a limpiar esto reseteando el index y eliminando las columnas movieId, title, géneros y año.
+#Restablecemos del índice para evitar problemas futuros
+userMovies = userMovies.reset_index(drop=True)
+#Eliminamos problemas innecesarios para ahorrar memoria y evitar problemas
+userGenreTable = userMovies.drop('movieId', 1).drop('title', 1).drop('genres', 1).drop('year', 1)
+userGenreTable
+
+#Ahora estamos listos para entender mejor las preferencias de nuestro input.
+  #Podemos hacer esto usando las reseñas de la entrada y multiplicándolas en la tabla de género de la entrada. Luego sumamos la tabla resultante por columna. 
+  #Esta operación se conoce como producto escalar entre una matriz y un vector, por lo que simplemente podemos lograrlo llamando a la función "punto" de Pandas.
+inputMovies['rating']
+#[OUT]: 0    3.5
+        1    2.0
+        2    5.0
+        3    4.5
+        4    5.0
+        Name: rating, dtype: float64
+        
+#Producto escalar para obtener pesos
+userProfile = userGenreTable.transpose().dot(inputMovies['rating'])
+userProfile   
+#[OUT]: Adventure             10.0
+        Animation              8.0
+        Children               5.5
+        Comedy                13.5
+        Fantasy                5.5
+        Romance                0.0
+        Drama                 10.0
+        Action                 4.5
+        Crime                  5.0
+        Thriller               5.0
+        Horror                 0.0
+        Mystery                0.0
+        Sci-Fi                 4.5
+        IMAX                   0.0
+        Documentary            0.0
+        War                    0.0
+        Musical                0.0
+        Western                0.0
+        Film-Noir              0.0
+        (no genres listed)     0.0
+        dtype: float64
+        
+        
