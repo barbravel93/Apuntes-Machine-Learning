@@ -127,4 +127,39 @@ userProfile
         (no genres listed)     0.0
         dtype: float64
         
-        
+#Ahora, tenemos los pesos para cada una de las preferencias del usuario. Esto se conoce como perfil de usuario. 
+  #Con esto, podemos recomendar películas que satisfagan las preferencias del usuario.        
+#Ahora, obtengamos los géneros de cada película en nuestro marco de datos original.
+genreTable = moviesWithGenres_df.set_index(moviesWithGenres_df['movieId'])
+#Eliminamos la información necesaria
+genreTable = genreTable.drop('movieId', 1).drop('title', 1).drop('genres', 1).drop('year', 1)
+genreTable.head()
+
+genreTable.shape
+#[OUT]: (34208, 20)
+
+#Con el perfil de entrada y la lista completa de películas y sus géneros en la mano, 
+  #...tomaremos el promedio ponderado de cada película en función del perfil de entrada y recomendaremos las veinte películas principales que más lo satisfagan.
+#Multiplicamos los géneros por los pesos y luego tomamos el promedio ponderado
+recommendationTable_df = ((genreTable*userProfile).sum(axis=1))/(userProfile.sum())
+recommendationTable_df.head()
+#[OUT]: movieId
+        1    0.594406
+        2    0.293706
+        3    0.188811
+        4    0.328671
+        5    0.188811
+        dtype: float64
+#Ordenamos nuestras recomendaciones en orden descendente
+recommendationTable_df = recommendationTable_df.sort_values(ascending=False)
+recommendationTable_df.head() 
+#[OUT]: movieId
+        5018      0.748252
+        26093     0.734266
+        27344     0.720280
+        148775    0.685315
+        6902      0.678322
+        dtype: float64   
+
+#Ya podemos mostrar la tabla final de recomendaciones
+movies_df.loc[movies_df['movieId'].isin(recommendationTable_df.head(20).keys())]
